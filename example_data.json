@@ -1,0 +1,34 @@
+{"phase": "dynamo", "id": "input_tensor", "edges": [], "metadata": {"shape": [32, 128, 768], "dtype": "float32", "device": "cuda:0", "requires_grad": true, "source": "model_input"}}
+{"phase": "dynamo", "id": "linear_weight", "edges": [], "metadata": {"shape": [768, 3072], "dtype": "float32", "device": "cuda:0", "requires_grad": true, "source": "parameter"}}
+{"phase": "dynamo", "id": "matmul_1", "edges": ["activation_1"], "metadata": {"op": "torch.ops.aten.mm.default", "inputs": ["input_tensor", "linear_weight"], "output_shape": [32, 128, 3072]}}
+{"phase": "dynamo", "id": "activation_1", "edges": ["dropout_1"], "metadata": {"op": "torch.ops.aten.gelu.default", "inputs": ["matmul_1"], "output_shape": [32, 128, 3072]}}
+{"phase": "dynamo", "id": "dropout_1", "edges": [], "metadata": {"op": "torch.ops.aten.dropout.default", "inputs": ["activation_1"], "p": 0.1, "training": true}}
+
+{"phase": "aot_autograd", "id": "input_tensor", "edges": [], "metadata": {"shape": [32, 128, 768], "dtype": "float32", "stride": [98304, 768, 1], "storage_offset": 0}}
+{"phase": "aot_autograd", "id": "linear_weight", "edges": [], "metadata": {"shape": [768, 3072], "dtype": "float32", "stride": [3072, 1], "storage_offset": 0}}
+{"phase": "aot_autograd", "id": "matmul_1", "edges": ["activation_1"], "metadata": {"op": "aten.mm", "decomposed": false, "memory_format": "contiguous", "algorithm": "default"}}
+{"phase": "aot_autograd", "id": "activation_1", "edges": ["dropout_1"], "metadata": {"op": "aten.gelu", "approximate": "none", "memory_efficient": true}}
+{"phase": "aot_autograd", "id": "dropout_1", "edges": ["grad_output"], "metadata": {"op": "aten.dropout", "p": 0.1, "generator": null, "training": true}}
+{"phase": "aot_autograd", "id": "grad_output", "edges": [], "metadata": {"shape": [32, 128, 3072], "dtype": "float32", "backward_node": "DropoutBackward0"}}
+
+{"phase": "inductor", "id": "input_tensor", "edges": [], "metadata": {"buffer_name": "buf0", "memory_layout": "contiguous", "allocation": "input", "reuse_count": 2}}
+{"phase": "inductor", "id": "linear_weight", "edges": [], "metadata": {"buffer_name": "buf1", "memory_layout": "contiguous", "allocation": "parameter", "frozen": true}}
+{"phase": "inductor", "id": "matmul_1", "edges": ["activation_1"], "metadata": {"kernel": "triton_gemm_kernel", "grid": [32, 96], "block_size": [16, 16], "tiling": [128, 128, 32]}}
+{"phase": "inductor", "id": "activation_1", "edges": ["dropout_1"], "metadata": {"kernel": "triton_pointwise_kernel", "grid": [12288], "block_size": 256, "fusion_group": "gelu_dropout"}}
+{"phase": "inductor", "id": "dropout_1", "edges": [], "metadata": {"kernel": "triton_pointwise_kernel", "grid": [12288], "block_size": 256, "fusion_group": "gelu_dropout", "rng_seed": 42}}
+{"phase": "inductor", "id": "fused_kernel_1", "edges": [], "metadata": {"kernel": "triton_pointwise_kernel", "fused_ops": ["gelu", "dropout"], "performance_gain": "2.3x"}}
+
+{"phase": "scheduler", "id": "matmul_1", "edges": ["activation_1"], "metadata": {"priority": 1, "dependencies": ["input_tensor", "linear_weight"], "estimated_runtime_ms": 0.8, "memory_footprint_mb": 384}}
+{"phase": "scheduler", "id": "activation_1", "edges": ["dropout_1"], "metadata": {"priority": 2, "dependencies": ["matmul_1"], "estimated_runtime_ms": 0.2, "memory_footprint_mb": 48}}
+{"phase": "scheduler", "id": "dropout_1", "edges": [], "metadata": {"priority": 2, "dependencies": ["activation_1"], "estimated_runtime_ms": 0.1, "memory_footprint_mb": 48}}
+{"phase": "scheduler", "id": "fused_kernel_1", "edges": [], "metadata": {"priority": 2, "dependencies": ["matmul_1"], "estimated_runtime_ms": 0.15, "replaces": ["activation_1", "dropout_1"]}}
+
+{"phase": "codegen", "id": "matmul_1", "edges": ["fused_kernel_1"], "metadata": {"generated_code": "triton_mm_kernel.py", "lines_of_code": 89, "compile_time_ms": 45, "ptx_instructions": 234}}
+{"phase": "codegen", "id": "fused_kernel_1", "edges": [], "metadata": {"generated_code": "triton_pointwise_kernel.py", "lines_of_code": 67, "compile_time_ms": 32, "ptx_instructions": 156}}
+{"phase": "codegen", "id": "input_tensor", "edges": [], "metadata": {"memory_access_pattern": "coalesced", "bank_conflicts": 0, "cache_efficiency": 0.95}}
+{"phase": "codegen", "id": "linear_weight", "edges": [], "metadata": {"memory_access_pattern": "broadcast", "bank_conflicts": 0, "cache_efficiency": 0.89}}
+
+{"phase": "runtime", "id": "matmul_1", "edges": ["fused_kernel_1"], "metadata": {"actual_runtime_ms": 0.82, "throughput_tflops": 15.6, "memory_bandwidth_gb_s": 890, "gpu_utilization": 0.94}}
+{"phase": "runtime", "id": "fused_kernel_1", "edges": [], "metadata": {"actual_runtime_ms": 0.14, "throughput_tflops": 8.2, "memory_bandwidth_gb_s": 1200, "gpu_utilization": 0.87}}
+{"phase": "runtime", "id": "input_tensor", "edges": [], "metadata": {"memory_transfers": 1, "cache_hits": 0.92, "memory_efficiency": 0.88}}
+{"phase": "runtime", "id": "linear_weight", "edges": [], "metadata": {"memory_transfers": 0, "cache_hits": 1.0, "memory_efficiency": 0.95, "weight_caching": true}}

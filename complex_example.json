@@ -1,0 +1,74 @@
+{"phase": "dynamo", "id": "input_x", "edges": ["conv2d_1", "residual_add"], "metadata": {"shape": [32, 3, 224, 224], "dtype": "float32", "source": "model_input"}}
+{"phase": "dynamo", "id": "input_weight_conv1", "edges": ["conv2d_1"], "metadata": {"shape": [64, 3, 7, 7], "dtype": "float32", "source": "parameter"}}
+{"phase": "dynamo", "id": "conv2d_1", "edges": ["batch_norm_1", "branch_conv"], "metadata": {"op": "torch.ops.aten.conv2d.default", "stride": [2, 2], "padding": [3, 3]}}
+{"phase": "dynamo", "id": "batch_norm_1", "edges": ["relu_1"], "metadata": {"op": "torch.ops.aten.batch_norm.default", "eps": 1e-5, "momentum": 0.1}}
+{"phase": "dynamo", "id": "relu_1", "edges": ["maxpool_1"], "metadata": {"op": "torch.ops.aten.relu.default", "inplace": false}}
+{"phase": "dynamo", "id": "maxpool_1", "edges": ["conv2d_2", "residual_add"], "metadata": {"op": "torch.ops.aten.max_pool2d.default", "kernel_size": [3, 3], "stride": [2, 2]}}
+{"phase": "dynamo", "id": "conv2d_2", "edges": ["batch_norm_2"], "metadata": {"op": "torch.ops.aten.conv2d.default", "kernel_size": [3, 3], "padding": [1, 1]}}
+{"phase": "dynamo", "id": "batch_norm_2", "edges": ["relu_2"], "metadata": {"op": "torch.ops.aten.batch_norm.default", "eps": 1e-5}}
+{"phase": "dynamo", "id": "relu_2", "edges": ["conv2d_3"], "metadata": {"op": "torch.ops.aten.relu.default", "inplace": true}}
+{"phase": "dynamo", "id": "conv2d_3", "edges": ["residual_add"], "metadata": {"op": "torch.ops.aten.conv2d.default", "kernel_size": [3, 3], "padding": [1, 1]}}
+{"phase": "dynamo", "id": "branch_conv", "edges": ["branch_bn"], "metadata": {"op": "torch.ops.aten.conv2d.default", "kernel_size": [1, 1], "stride": [2, 2]}}
+{"phase": "dynamo", "id": "branch_bn", "edges": ["residual_add"], "metadata": {"op": "torch.ops.aten.batch_norm.default", "eps": 1e-5}}
+{"phase": "dynamo", "id": "residual_add", "edges": ["final_relu", "attention_branch"], "metadata": {"op": "torch.ops.aten.add.default", "inputs": ["maxpool_1", "conv2d_3", "branch_bn"]}}
+{"phase": "dynamo", "id": "attention_branch", "edges": ["attention_pool"], "metadata": {"op": "torch.ops.aten.adaptive_avg_pool2d.default", "output_size": [1, 1]}}
+{"phase": "dynamo", "id": "attention_pool", "edges": ["attention_fc1"], "metadata": {"op": "torch.ops.aten.adaptive_avg_pool2d.default", "output_size": [1, 1]}}
+{"phase": "dynamo", "id": "attention_fc1", "edges": ["attention_relu"], "metadata": {"op": "torch.ops.aten.linear.default", "out_features": 16}}
+{"phase": "dynamo", "id": "attention_relu", "edges": ["attention_fc2"], "metadata": {"op": "torch.ops.aten.relu.default"}}
+{"phase": "dynamo", "id": "attention_fc2", "edges": ["attention_sigmoid"], "metadata": {"op": "torch.ops.aten.linear.default", "out_features": 64}}
+{"phase": "dynamo", "id": "attention_sigmoid", "edges": ["attention_mul"], "metadata": {"op": "torch.ops.aten.sigmoid.default"}}
+{"phase": "dynamo", "id": "attention_mul", "edges": ["final_relu"], "metadata": {"op": "torch.ops.aten.mul.default", "inputs": ["residual_add", "attention_sigmoid"]}}
+{"phase": "dynamo", "id": "final_relu", "edges": [], "metadata": {"op": "torch.ops.aten.relu.default", "output_shape": [32, 64, 56, 56]}}
+
+{"phase": "aot_autograd", "id": "input_x", "edges": ["conv2d_1", "residual_add"], "metadata": {"shape": [32, 3, 224, 224], "stride": [150528, 50176, 224, 1]}}
+{"phase": "aot_autograd", "id": "input_weight_conv1", "edges": ["conv2d_1"], "metadata": {"shape": [64, 3, 7, 7], "stride": [147, 49, 7, 1]}}
+{"phase": "aot_autograd", "id": "conv2d_1", "edges": ["fused_conv_bn_1"], "metadata": {"op": "aten.conv2d", "algorithm": "cudnn"}}
+{"phase": "aot_autograd", "id": "fused_conv_bn_1", "edges": ["relu_1"], "metadata": {"op": "aten.conv_bn_fused", "fused": ["conv2d_1", "batch_norm_1"]}}
+{"phase": "aot_autograd", "id": "relu_1", "edges": ["maxpool_1"], "metadata": {"op": "aten.relu", "inplace": true}}
+{"phase": "aot_autograd", "id": "maxpool_1", "edges": ["residual_path", "attention_branch"], "metadata": {"op": "aten.max_pool2d", "ceil_mode": false}}
+{"phase": "aot_autograd", "id": "residual_path", "edges": ["fused_conv_bn_2"], "metadata": {"op": "decomposed_residual_block", "components": ["conv2d_2", "batch_norm_2", "relu_2", "conv2d_3"]}}
+{"phase": "aot_autograd", "id": "fused_conv_bn_2", "edges": ["residual_add"], "metadata": {"op": "aten.conv_bn_relu_conv", "fused_sequence": 4}}
+{"phase": "aot_autograd", "id": "attention_branch", "edges": ["attention_module"], "metadata": {"op": "aten.adaptive_avg_pool2d"}}
+{"phase": "aot_autograd", "id": "attention_module", "edges": ["attention_mul"], "metadata": {"op": "squeeze_excitation_fused", "reduction_ratio": 4}}
+{"phase": "aot_autograd", "id": "residual_add", "edges": ["attention_mul"], "metadata": {"op": "aten.add", "alpha": 1.0}}
+{"phase": "aot_autograd", "id": "attention_mul", "edges": ["final_relu"], "metadata": {"op": "aten.mul"}}
+{"phase": "aot_autograd", "id": "final_relu", "edges": [], "metadata": {"op": "aten.relu", "inplace": true}}
+
+{"phase": "inductor", "id": "input_x", "edges": ["triton_conv_kernel"], "metadata": {"buffer": "buf0", "layout": "NCHW", "memory_format": "channels_last"}}
+{"phase": "inductor", "id": "input_weight_conv1", "edges": ["triton_conv_kernel"], "metadata": {"buffer": "buf1", "frozen": true, "layout": "packed"}}
+{"phase": "inductor", "id": "triton_conv_kernel", "edges": ["triton_fused_kernel_1"], "metadata": {"kernel": "triton_conv2d_kernel", "grid": [112, 112, 32], "algorithm": "implicit_gemm"}}
+{"phase": "inductor", "id": "triton_fused_kernel_1", "edges": ["triton_pool_kernel"], "metadata": {"kernel": "triton_pointwise_kernel", "fused_ops": ["conv_bn", "relu"], "grid": [25088]}}
+{"phase": "inductor", "id": "triton_pool_kernel", "edges": ["triton_residual_kernel", "triton_attention_kernel"], "metadata": {"kernel": "triton_max_pool2d_kernel", "grid": [49, 49, 32]}}
+{"phase": "inductor", "id": "triton_residual_kernel", "edges": ["triton_add_kernel"], "metadata": {"kernel": "triton_conv_sequence_kernel", "optimized_sequence": "conv_bn_relu_conv"}}
+{"phase": "inductor", "id": "triton_attention_kernel", "edges": ["triton_se_kernel"], "metadata": {"kernel": "triton_adaptive_pool_kernel", "reduction": "mean"}}
+{"phase": "inductor", "id": "triton_se_kernel", "edges": ["triton_broadcast_mul"], "metadata": {"kernel": "triton_squeeze_excitation_kernel", "tiled_computation": true}}
+{"phase": "inductor", "id": "triton_add_kernel", "edges": ["triton_broadcast_mul"], "metadata": {"kernel": "triton_pointwise_kernel", "op": "add"}}
+{"phase": "inductor", "id": "triton_broadcast_mul", "edges": ["triton_final_relu"], "metadata": {"kernel": "triton_pointwise_kernel", "op": "broadcast_mul"}}
+{"phase": "inductor", "id": "triton_final_relu", "edges": [], "metadata": {"kernel": "triton_pointwise_kernel", "op": "relu", "inplace": true}}
+
+{"phase": "scheduler", "id": "triton_conv_kernel", "edges": ["triton_fused_kernel_1"], "metadata": {"priority": 1, "dependencies": 2, "estimated_ms": 2.1, "memory_mb": 768}}
+{"phase": "scheduler", "id": "triton_fused_kernel_1", "edges": ["triton_pool_kernel"], "metadata": {"priority": 2, "dependencies": 1, "estimated_ms": 0.8, "memory_mb": 256}}
+{"phase": "scheduler", "id": "triton_pool_kernel", "edges": ["parallel_branch_1", "parallel_branch_2"], "metadata": {"priority": 3, "dependencies": 1, "estimated_ms": 0.4, "memory_mb": 128}}
+{"phase": "scheduler", "id": "parallel_branch_1", "edges": ["sync_point"], "metadata": {"priority": 4, "parallel_with": "parallel_branch_2", "estimated_ms": 1.2, "represents": "triton_residual_kernel"}}
+{"phase": "scheduler", "id": "parallel_branch_2", "edges": ["sync_point"], "metadata": {"priority": 4, "parallel_with": "parallel_branch_1", "estimated_ms": 0.6, "represents": "triton_attention_kernel"}}
+{"phase": "scheduler", "id": "sync_point", "edges": ["triton_broadcast_mul"], "metadata": {"priority": 5, "synchronization": true, "estimated_ms": 0.1, "memory_mb": 64}}
+{"phase": "scheduler", "id": "triton_broadcast_mul", "edges": ["triton_final_relu"], "metadata": {"priority": 6, "dependencies": 1, "estimated_ms": 0.3, "memory_mb": 256}}
+{"phase": "scheduler", "id": "triton_final_relu", "edges": [], "metadata": {"priority": 7, "dependencies": 1, "estimated_ms": 0.2, "memory_mb": 256}}
+
+{"phase": "codegen", "id": "triton_conv_kernel", "edges": ["triton_fused_kernel_1"], "metadata": {"generated_file": "conv2d_kernel.py", "lines": 234, "compile_ms": 120, "registers": 48}}
+{"phase": "codegen", "id": "triton_fused_kernel_1", "edges": ["triton_pool_kernel"], "metadata": {"generated_file": "fused_conv_bn_relu.py", "lines": 187, "compile_ms": 89, "registers": 32}}
+{"phase": "codegen", "id": "triton_pool_kernel", "edges": ["parallel_branch_1", "parallel_branch_2"], "metadata": {"generated_file": "max_pool2d_kernel.py", "lines": 156, "compile_ms": 67, "registers": 24}}
+{"phase": "codegen", "id": "parallel_branch_1", "edges": ["sync_point"], "metadata": {"generated_file": "residual_block_kernel.py", "lines": 298, "compile_ms": 145, "registers": 56}}
+{"phase": "codegen", "id": "parallel_branch_2", "edges": ["sync_point"], "metadata": {"generated_file": "squeeze_excitation_kernel.py", "lines": 167, "compile_ms": 78, "registers": 28}}
+{"phase": "codegen", "id": "sync_point", "edges": ["triton_broadcast_mul"], "metadata": {"generated_file": "synchronization_barrier.py", "lines": 45, "compile_ms": 23, "registers": 8}}
+{"phase": "codegen", "id": "triton_broadcast_mul", "edges": ["triton_final_relu"], "metadata": {"generated_file": "broadcast_mul_kernel.py", "lines": 89, "compile_ms": 41, "registers": 16}}
+{"phase": "codegen", "id": "triton_final_relu", "edges": [], "metadata": {"generated_file": "relu_kernel.py", "lines": 67, "compile_ms": 34, "registers": 12}}
+
+{"phase": "runtime", "id": "triton_conv_kernel", "edges": ["triton_fused_kernel_1"], "metadata": {"actual_ms": 2.08, "throughput_tflops": 12.4, "occupancy": 0.89, "shared_mem_usage": 48128}}
+{"phase": "runtime", "id": "triton_fused_kernel_1", "edges": ["triton_pool_kernel"], "metadata": {"actual_ms": 0.76, "throughput_tflops": 8.9, "occupancy": 0.94, "shared_mem_usage": 32768}}
+{"phase": "runtime", "id": "triton_pool_kernel", "edges": ["parallel_branch_1", "parallel_branch_2"], "metadata": {"actual_ms": 0.39, "throughput_gb_s": 1200, "occupancy": 0.87, "shared_mem_usage": 16384}}
+{"phase": "runtime", "id": "parallel_branch_1", "edges": ["sync_point"], "metadata": {"actual_ms": 1.18, "throughput_tflops": 6.7, "occupancy": 0.91, "parallel_efficiency": 0.95}}
+{"phase": "runtime", "id": "parallel_branch_2", "edges": ["sync_point"], "metadata": {"actual_ms": 0.58, "throughput_tflops": 4.2, "occupancy": 0.88, "parallel_efficiency": 0.97}}
+{"phase": "runtime", "id": "sync_point", "edges": ["triton_broadcast_mul"], "metadata": {"actual_ms": 0.09, "synchronization_overhead": 0.02, "occupancy": 0.45, "barrier_efficiency": 0.98}}
+{"phase": "runtime", "id": "triton_broadcast_mul", "edges": ["triton_final_relu"], "metadata": {"actual_ms": 0.28, "throughput_gb_s": 1850, "occupancy": 0.92, "memory_efficiency": 0.91}}
+{"phase": "runtime", "id": "triton_final_relu", "edges": [], "metadata": {"actual_ms": 0.19, "throughput_gb_s": 1600, "occupancy": 0.89, "memory_efficiency": 0.94}}

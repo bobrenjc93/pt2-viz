@@ -1,0 +1,17 @@
+{
+  "name": "pt2-viz",
+  "version": "1.0.0",
+  "description": "PT2 Compiler Visualization Tool",
+  "main": "index.html",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "keywords": ["pt2", "compiler", "visualization", "d3js"],
+  "author": "",
+  "license": "MIT"
+}

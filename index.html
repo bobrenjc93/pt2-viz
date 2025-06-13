@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT2 Compiler Visualization</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>PT2 Compiler Visualization</h1>
+            <div class="json-input-section">
+                <textarea id="jsonInput" placeholder="Sample data loaded - replace with your JSON data (one JSON object per line) or press Parse to render the sample..." rows="6"></textarea>
+                <button id="parseButton">Parse & Visualize</button>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="controls-section">
+                <div class="phase-controls">
+                    <h3>Phases:</h3>
+                    <div id="phaseButtons"></div>
+                </div>
+                
+                <div class="graph-controls">
+                    <label>
+                        <input type="checkbox" id="showEdges" checked>
+                        Show Graph Edges
+                    </label>
+                </div>
+            </div>
+            
+            <div class="visualization-area">
+                <div class="vis-container">
+                    <div id="loadingIndicator" class="loading-indicator">
+                        <div class="spinner"></div>
+                        <p>Processing data and rendering visualization...</p>
+                    </div>
+                    <svg id="visualization"></svg>
+                </div>
+                
+                <div class="metadata-panel hidden" id="metadataPanel">
+                    <div class="panel-header">
+                        <h3>Node Metadata</h3>
+                        <button id="closeSidebar">×</button>
+                    </div>
+                    <div id="metadataContent">
+                        <p>Click on a node to view its metadata</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

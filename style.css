@@ -1,0 +1,412 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.container {
+    max-width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background: white;
+    padding: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.json-input-section {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+#jsonInput {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    resize: vertical;
+}
+
+#parseButton {
+    padding: 10px 20px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#parseButton:hover {
+    background: #2980b9;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.controls-section {
+    background: white;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.phase-controls h3 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.graph-controls {
+    display: flex;
+    align-items: center;
+}
+
+.graph-controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #2c3e50;
+    cursor: pointer;
+}
+
+.graph-controls input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+#phaseButtons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.phase-button {
+    padding: 8px 16px;
+    border: 2px solid #3498db;
+    background: white;
+    color: #3498db;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.phase-button.active {
+    background: #3498db;
+    color: white;
+}
+
+.phase-button:hover {
+    background: #ecf0f1;
+}
+
+.phase-button.active:hover {
+    background: #2980b9;
+}
+
+.visualization-area {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.vis-container {
+    flex: 2;
+    background: white;
+    margin: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+#visualization {
+    width: 100%;
+    height: 100%;
+}
+
+.metadata-panel {
+    flex: 0 0 400px;
+    background: white;
+    margin: 10px 10px 10px 0;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    transform: translateX(0);
+}
+
+.metadata-panel.hidden {
+    flex: 0 0 0px;
+    margin: 10px 0px 10px 0;
+    padding: 0;
+    overflow: hidden;
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.panel-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 5px;
+    flex: 1;
+}
+
+#closeSidebar {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+#closeSidebar:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+#metadataContent {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    background: #f8f9fa;
+    color: #2c3e50;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #e9ecef;
+}
+
+/* Node styles */
+.node {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.node circle {
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+.node.highlighted circle {
+    stroke: #e74c3c;
+    stroke-width: 4px;
+}
+
+.node.selected circle {
+    stroke: #f39c12;
+    stroke-width: 3px;
+}
+
+.node text {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 12px;
+    text-anchor: middle;
+    pointer-events: none;
+}
+
+/* Phase group styles */
+.phase-group {
+    opacity: 0.8;
+}
+
+.phase-group.hidden {
+    display: none;
+}
+
+.phase-label {
+    font-size: 16px;
+    font-weight: bold;
+    fill: #2c3e50;
+}
+
+.phase-separator {
+    stroke: #bdc3c7;
+    stroke-width: 1;
+    opacity: 0.5;
+}
+
+/* Loading indicator styles */
+.loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.loading-indicator.hidden {
+    display: none;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e0e0e0;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-indicator p {
+    margin: 0;
+    color: #2c3e50;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Edge styles */
+.edge {
+    stroke-width: 2px;
+    stroke-opacity: 0.6;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.edge.highlighted {
+    stroke-width: 3px;
+    stroke-opacity: 1;
+    stroke: #e74c3c !important;
+}
+
+/* Arrowhead styles */
+.arrowhead {
+    fill: #666;
+    stroke: none;
+}
+
+.arrowhead-highlighted {
+    fill: #e74c3c;
+    stroke: none;
+}
+
+/* Metadata content styles */
+.metadata-header {
+    margin-bottom: 20px;
+}
+
+.metadata-item {
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.metadata-item strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.metadata-item code {
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #2c3e50;
+}
+
+.phase-badge {
+    background: #3498db;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.edges-list {
+    margin-top: 5px;
+}
+
+.edge-item {
+    background: #e8f4fd;
+    color: #2980b9;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-right: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.metadata-json {
+    margin-top: 5px;
+}
+
+.json-content {
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    overflow-x: auto;
+}
+
+.no-metadata, .error-metadata {
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.error-display {
+    background: #fdf2f2;
+    border: 1px solid #fecaca;
+    padding: 15px;
+    border-radius: 5px;
+    color: #b91c1c;
+}
+
+.error-display h4 {
+    margin-bottom: 10px;
+    color: #dc2626;
+}
